@@ -1,11 +1,15 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { useMemo } from "react";
+import { useMemo, forwardRef, useImperativeHandle } from "react";
 import { insertDataIntoMessages } from "./transform";
 import { ChatInput, ChatMessages } from "./ui/chat";
 
-export default function ChatSection() {
+export interface ChatSectionRef {
+  setInput: (value: string) => void;
+}
+
+const ChatSection = forwardRef<ChatSectionRef>((props, ref) => {
   const sessionId = useMemo(() => {
     if (typeof window === 'undefined') return "";
     const stored = sessionStorage.getItem("sessionId");
@@ -56,6 +60,11 @@ export default function ChatSection() {
     }
   });
 
+  useImperativeHandle(ref, () => ({
+    setInput: (value: string) => {
+      handleInputChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>);
+    }
+  }));
 
   const transformedMessages = useMemo(() => {
     console.log('messages', messages);
@@ -79,4 +88,6 @@ export default function ChatSection() {
       />
     </div>
   );
-}
+});
+
+export default ChatSection;
