@@ -12,6 +12,10 @@ from app.api.routers.chat import chat_router
 from app.settings import init_settings
 from instrument import instrument
 
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 instrument()
 
 app = FastAPI()
