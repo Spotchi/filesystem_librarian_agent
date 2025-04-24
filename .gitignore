@@ -1,3 +1,8 @@
 .gradio/
 
 __pycache__/
+
+checkpoints/
+
+.env
+.DS_Store
