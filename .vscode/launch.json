@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python Debugger: Current File with Arguments",
+      "name": "Python Debugger: FastAPI BE with Arguments",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/backend/main.py",
@@ -18,7 +18,7 @@
       "name": "Python Debugger: Run Workflow",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/backend/app/engine/run_workflow.py",
+      "program": "${workspaceFolder}/backend/app/engine/run_agent_workflow.py",
       "console": "integratedTerminal"
     },
     {
