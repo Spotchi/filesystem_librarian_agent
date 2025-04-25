@@ -2,7 +2,7 @@ from llama_index.core.schema import NodeWithScore
 from pydantic import BaseModel
 
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 class _SourceNodes(BaseModel):

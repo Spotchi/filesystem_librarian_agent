@@ -2,7 +2,7 @@ from llama_index.core.llms import MessageRole
 from pydantic import BaseModel
 
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 class ToolInvocation(BaseModel):

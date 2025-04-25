@@ -13,8 +13,6 @@ async def suggest_file_operations(
     The response contains a batchId string, and an 'operations' field, each operation has a source path and a destination path, as well as an operation type (move or rename). \
     Optionally there is a isDirectory flag
     """
-    await ctx.set("suggestions", suggestion)
-    print(f"Setting Suggestions: {suggestion}")
     return "Suggestions processed successfully"
 
 
@@ -30,10 +28,11 @@ def absolute_path(path: str) -> str:
 
 async def apply_file_operations(
     ctx: Context,
+    suggestion: FileOperationsResponse,
 ) -> str:
     """Apply a list of file operations to the user's directory
     """
-    suggestion = await ctx.get("suggestions")
+    # suggestion = await ctx.get("suggestions")
     parsed_suggestion = FileOperationsResponse(**suggestion)
     for operation in parsed_suggestion.operations:
         if operation.isDirectory:

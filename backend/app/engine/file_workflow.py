@@ -8,7 +8,7 @@ from llama_index.llms.openai import OpenAI
 
 import logging
 
-from backend.app.engine import get_agent
+from app.engine.get_agent import get_agent
 
 class TreeInputEvent(Event):
     pass

@@ -47,7 +47,7 @@ Suggested structure:
 Explanation:
 - Folders should be named consistently and clearly, and be consistent with the names of the files they contain: Since `vegetable masala` was not related to `AI` but was related to `Cooking`, I moved it to that folder. 
 
-Call the get_vault_tree_tool to get the current folder structure.
+Always call the get_vault_tree_tool before calling any other tool to get the current folder structure.
 
 Translate the operations needed for this into a list of file operations and call the suggestion_tool if operations are needed. Also ask the user if they want to apply the operations.
 

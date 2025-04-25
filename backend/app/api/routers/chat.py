@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 import nest_asyncio
 
 from app.api.routers.ContextSerializer import ContextSerializer
-from app.engine import get_agent
+from app.engine.get_agent import get_agent
 from app.engine.event_model import _Message
 from app.engine.source_model import _SourceNodes
 
@@ -14,6 +14,7 @@ nest_asyncio.apply()
 from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core.agent.workflow import AgentStream, ToolCall, ToolCallResult
 from llama_index.core.workflow.events import StartEvent
+from llama_index.core.memory import ChatMemoryBuffer
 from openinference.semconv.trace import SpanAttributes
 from opentelemetry import trace
 from pydantic import BaseModel
@@ -104,62 +105,56 @@ async def chat(
     if (user_id := request.headers.get("X-User-Id", None)) is not None:
         attributes[SpanAttributes.USER_ID] = user_id
     llm = OpenAI(temperature=0.5, model="gpt-4o-mini")
+    memory = ChatMemoryBuffer.from_defaults(token_limit=40000)
 
     # Load context from disk if it exists
     if os.path.exists(f"checkpoints/{id}.json"):
         try:
             with open(f"checkpoints/{id}.json", "r") as f:
-                checkpoint = Checkpoint(**json.load(f))
+                memory = ChatMemoryBuffer.from_json(f.read())
+                # checkpoint = Checkpoint(**json.load(f))
         except Exception as e:
             logging.error(f"Error loading checkpoint: {e}")
-            checkpoint = None
-    else:
-        checkpoint = None
+            # checkpoint = None
+    # else:
+        # checkpoint = None
 
     with tracer.start_as_current_span(
         "chat", attributes=attributes, end_on_exit=False
     ) as span:
         agent = get_agent(llm, [suggestion_tool, apply_file_operations_tool, get_vault_tree_tool])
         workflow = AgentWorkflow(agents=[agent])
-        wflow_ckptr = WorkflowCheckpointer(
-            workflow=workflow, checkpoint_serializer=ContextSerializer()
-        )
+        # wflow_ckptr = WorkflowCheckpointer(
+        #     workflow=workflow, checkpoint_serializer=ContextSerializer()
+        # )
 
         last_message_content, messages = await parse_chat_data(data)
         span.set_attribute(SpanAttributes.INPUT_VALUE, last_message_content)
 
-        if checkpoint is not None:
-            logger.info(f"Loaded checkpoint: {checkpoint}")
-            handler = wflow_ckptr.run_from(checkpoint=checkpoint)
-            handler.ctx.send_event(
-                StartEvent(
-                    user_msg=last_message_content,
-                    chat_history=messages,
-                )
-            )
-        else:
-            logger.info("No checkpoint found, running from scratch")
-            handler = wflow_ckptr.run(
-                user_msg=last_message_content,
-                chat_history=messages,
-            )
-        run_id = handler.run_id
+        handler = workflow.run(
+            user_msg=last_message_content,
+            # chat_history=messages,
+            memory=memory,
+        )
 
         async def event_generator():
             full_response = ""
             async for event in handler.stream_events():
 
                 # capture InputRequiredEvent
-                if isinstance(event, ToolCall):
+                if isinstance(event, ToolCallResult):
+                    tool_call_result = {
+                        "toolCallId": event.tool_id,
+                        "result": event.tool_output.model_dump(),
+                    }
+                    yield f"a:{json.dumps(tool_call_result)}\n"
+                elif isinstance(event, ToolCall):
                     tool_call = {
                         "toolCallId": event.tool_id,
                         "toolName": event.tool_name,
                         "args": event.tool_kwargs,
                     }
                     yield f"9:{json.dumps(tool_call)}\n"
-                elif isinstance(event, ToolCallResult):
-
-                    yield f"a:{event.model_dump_json()}\n"
                 elif isinstance(event, AgentStream):
                     if event.delta:
                         yield f"0:{json.dumps(event.delta)}\n"
@@ -167,16 +162,9 @@ async def chat(
                     print(type(event))
             yield f'd:{{"finishReason":"stop","usage":{{"promptTokens":10,"completionTokens":20}},"isContinued":false}}\n'
             span.set_attribute(SpanAttributes.OUTPUT_VALUE, full_response)
-
-            # with tracer.start_as_current_span("checkpoint_save") as parent:
-            checkpoints = wflow_ckptr.checkpoints.get(run_id, [])
-            if len(checkpoints) > 0:
-                # Save checkpoint to disk
-                checkpoint_json = checkpoints[0].model_dump()
-                # del checkpoint_json['input_event']
-                logger.info(f"Saving checkpoint to disk: {checkpoint_json}")
-                with open(f"checkpoints/{id}.json", "w") as f:
-                    json.dump(checkpoint_json, f)
+            logger.info(f"Saving memory to disk: {id}")
+            with open(f"checkpoints/{id}.json", "w") as f:
+                f.write(memory.model_dump_json())
 
             span.end()
 
