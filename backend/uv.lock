@@ -263,6 +263,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "arize-phoenix" },
+    { name = "baml-py" },
     { name = "fastapi", extra = ["standard"] },
     { name = "llama-index" },
     { name = "llama-index-utils-workflow" },
@@ -277,6 +278,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "arize-phoenix", specifier = ">=8.26.3" },
+    { name = "baml-py", specifier = ">=0.85.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.115.12" },
     { name = "llama-index", specifier = ">=0.12.32" },
     { name = "llama-index-utils-workflow", specifier = ">=0.3.1" },
@@ -286,6 +288,20 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "sqlmodel", specifier = ">=0.0.24" },
     { name = "uvicorn", specifier = ">=0.34.2" },
+]
+
+[[package]]
+name = "baml-py"
+version = "0.85.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/da/85/c98f40228f62187ddb368323e37cb5631a37351b36485d4ce2366de6aab9/baml_py-0.85.0-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:2ee6f2ae527f53dabb604e8ff300991007c916a20cbc96076992474f4fdef3a3", size = 15717200 },
+    { url = "https://files.pythonhosted.org/packages/6e/5f/cfbf58a1e2cee57a927fb5cc648612fada5c2dc580cda9b84495b0a821ad/baml_py-0.85.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:c58c41039f944a597266a0e28b218276eba8893c18798e958e3c636f3b8632e2", size = 14599814 },
+    { url = "https://files.pythonhosted.org/packages/c4/4f/508be95e592d11928b49f58ab7060a672296be70ffb476017e491206768d/baml_py-0.85.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f6dbdcf2fbe99cac91b16f42ac6b68a83503e64742c6bdf0d13b3a4d36a4521b", size = 18100069 },
+    { url = "https://files.pythonhosted.org/packages/0c/fe/b9568a1fc1c31c3a0ba579e3fc7ec85e6c65e778de37be5a39c78f8c2783/baml_py-0.85.0-cp38-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:009b4a09483e18c07c1aa121d032e142c6c9fc8beb5443e9849dfea67104f12c", size = 17435121 },
+    { url = "https://files.pythonhosted.org/packages/bd/a2/6aad043563ec17ec14881b1e9a74a4987461ee87b140acd2b496dac4836a/baml_py-0.85.0-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:06b4a13fd5fd6944ebe9ae0f9bdfea13ac38371e9caea1aeee30812a55a4dbf0", size = 17708379 },
+    { url = "https://files.pythonhosted.org/packages/d3/68/a8d010d5ac2329fdd1d9a212cb01a92dde3950033c7e7d3f803daa4a7642/baml_py-0.85.0-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:541bc4315803d4c2f4defd0066973c894e143317c0ff0860845885e63037eb05", size = 18265217 },
+    { url = "https://files.pythonhosted.org/packages/7c/8f/322328612389cba10cd06dfce0d1782c39fee8e16763bd56564cd9baf0a1/baml_py-0.85.0-cp38-abi3-win_amd64.whl", hash = "sha256:58a525c403786f5094c96acb87984ee65fba98283c6b14d14ac5df4ef60c8cda", size = 15744260 },
 ]
 
 [[package]]
