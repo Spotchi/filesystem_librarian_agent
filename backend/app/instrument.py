@@ -7,10 +7,12 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from openinference.semconv.resource import ResourceAttributes
 import os
 
+PROJECT_NAME = "qualia-filesystem-chat"
 
-def instrument():
+def instrument(attributes: dict):
     collector_endpoint = os.getenv("COLLECTOR_ENDPOINT")
-    resource = Resource(attributes={ResourceAttributes.PROJECT_NAME: "llama-index-chat"})
+    resource = Resource(attributes={ResourceAttributes.PROJECT_NAME: PROJECT_NAME,
+                                    **attributes})
     tracer_provider = trace_sdk.TracerProvider(resource=resource)
     span_exporter = OTLPSpanExporter(endpoint=collector_endpoint)
     span_processor = SimpleSpanProcessor(span_exporter=span_exporter)

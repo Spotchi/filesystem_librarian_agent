@@ -1,7 +1,4 @@
 from dotenv import load_dotenv
-
-load_dotenv()
-
 import logging
 import os
 import uvicorn
@@ -12,11 +9,12 @@ from app.api.routers.chat import chat_router
 from app.settings import init_settings
 from app.instrument import instrument
 
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-instrument()
+instrument(attributes={})
 
 app = FastAPI()
 
