@@ -6,3 +6,5 @@ checkpoints/
 
 .env
 .DS_Store
+
+__marimo__/
