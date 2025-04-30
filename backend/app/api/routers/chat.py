@@ -1,19 +1,16 @@
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 import logging
 from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 import nest_asyncio
 
-from app.api.routers.ContextSerializer import ContextSerializer
-from app.engine.get_agent import get_agent
 from app.engine.event_model import _Message
 from app.engine.source_model import _SourceNodes
 
-nest_asyncio.apply()
+from app.engine.workflows.orchestrate_suggest import orchestrate_suggest_workflow
 
 from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core.agent.workflow import AgentStream, ToolCall, ToolCallResult
-from llama_index.core.workflow.events import StartEvent
 from llama_index.core.memory import ChatMemoryBuffer
 from openinference.semconv.trace import SpanAttributes
 from opentelemetry import trace
@@ -21,19 +18,10 @@ from pydantic import BaseModel
 import os
 import httpx
 import json
-from app.engine.suggestion_tool import (
-    apply_file_operations_tool,
-    suggest_file_operations,
-    suggestion_tool,
-)
-import os
-from llama_index.core.workflow.checkpointer import Checkpoint
-from llama_index.llms.openai import OpenAI
-from llama_index.core.agent.workflow import AgentWorkflow
-from llama_index.core.workflow.checkpointer import WorkflowCheckpointer
 
-from pydantic import BaseModel
-from app.engine.vault_tool import get_vault_tree_tool
+from app.supabase_utils import get_memory, save_memory
+
+nest_asyncio.apply()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -98,36 +86,23 @@ async def chat(
     request: Request,
     data: _ChatData,
 ):
-    id = data.id
+    run_id = data.id
     attributes = {SpanAttributes.OPENINFERENCE_SPAN_KIND: "CHAIN"}
     if (session_id := request.headers.get("X-Session-Id", None)) is not None:
         attributes[SpanAttributes.SESSION_ID] = session_id
     if (user_id := request.headers.get("X-User-Id", None)) is not None:
         attributes[SpanAttributes.USER_ID] = user_id
-    llm = OpenAI(temperature=0.5, model="gpt-4o-mini")
-    memory = ChatMemoryBuffer.from_defaults(token_limit=40000)
 
-    # Load context from disk if it exists
-    if os.path.exists(f"checkpoints/{id}.json"):
-        try:
-            with open(f"checkpoints/{id}.json", "r") as f:
-                memory = ChatMemoryBuffer.from_json(f.read())
-                # checkpoint = Checkpoint(**json.load(f))
-        except Exception as e:
-            logging.error(f"Error loading checkpoint: {e}")
-            # checkpoint = None
-    # else:
-        # checkpoint = None
+    memory = get_memory(run_id)
+    if memory is None:
+        memory = ChatMemoryBuffer.from_defaults(token_limit=40000)
 
     with tracer.start_as_current_span(
         "chat", attributes=attributes, end_on_exit=False
     ) as span:
-        agent = get_agent(llm, [suggestion_tool, apply_file_operations_tool, get_vault_tree_tool])
-        workflow = AgentWorkflow(agents=[agent])
-        # wflow_ckptr = WorkflowCheckpointer(
-        #     workflow=workflow, checkpoint_serializer=ContextSerializer()
-        # )
-
+        
+        workflow = orchestrate_suggest_workflow()
+        
         last_message_content, messages = await parse_chat_data(data)
         span.set_attribute(SpanAttributes.INPUT_VALUE, last_message_content)
 
@@ -160,11 +135,14 @@ async def chat(
                         yield f"0:{json.dumps(event.delta)}\n"
                 else:
                     print(type(event))
-            yield f'd:{{"finishReason":"stop","usage":{{"promptTokens":10,"completionTokens":20}},"isContinued":false}}\n'
+            yield 'd:{"finishReason":"stop","usage":{"promptTokens":10,"completionTokens":20},"isContinued":false}\n'
             span.set_attribute(SpanAttributes.OUTPUT_VALUE, full_response)
             logger.info(f"Saving memory to disk: {id}")
             with open(f"checkpoints/{id}.json", "w") as f:
                 f.write(memory.model_dump_json())
+                
+            # save memory to supabase
+            save_memory(run_id=run_id, memory=memory)
 
             span.end()
 
