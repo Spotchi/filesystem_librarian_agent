@@ -71,6 +71,8 @@ export default function ChatMessage(chatMessage: Message) {
 
                 // Add result div if state is result
                 if (part.toolInvocation.state === 'result') {
+                  if (part.toolInvocation.toolName != 'get_vault_tree') {
+                    // get_vault_tree is not displayed, the agent seems to echo it
                   const resultContent = part.toolInvocation.result.content;
                   const status = part.toolInvocation.result.is_error == false ? "success" : "error";
                   components.push(
@@ -87,6 +89,7 @@ export default function ChatMessage(chatMessage: Message) {
                     </div>
                   );
                 }
+              }
 
                 return components.length > 0 ? <>{components}</> : null;
               }
