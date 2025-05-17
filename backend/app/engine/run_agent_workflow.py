@@ -13,6 +13,7 @@ from openinference.semconv.trace import SpanAttributes
 from opentelemetry import trace
 from app.instrument import instrument
 from app.engine.workflows.orchestrate_suggest import orchestrate_suggest_workflow, ORCHESTRATE_SUGGEST_WORKFLOW_ID
+from app.engine.workflows.para_workflow import para_workflow, ORCHESTRATE_PARA_WORKFLOW_ID
 from openinference.instrumentation import using_metadata
 
 from app.telemetry_attributes import TelemetryAttributes
@@ -38,7 +39,7 @@ async def main():
     }
     
     metadata = {
-        TelemetryAttributes.WORKFLOW_ID: ORCHESTRATE_SUGGEST_WORKFLOW_ID,
+        TelemetryAttributes.WORKFLOW_ID: ORCHESTRATE_PARA_WORKFLOW_ID,
         TelemetryAttributes.GIT_COMMIT_HASH: git_commit_hash,
         TelemetryAttributes.GIT_COMMIT_DATE: git_commit_date
     }
@@ -49,7 +50,7 @@ async def main():
             try:
                 while True:
                     user_msg = input("user: ")
-                    workflow = orchestrate_suggest_workflow()
+                    workflow = para_workflow()
                     handler = workflow.run(user_msg=user_msg, memory=memory)
                     current_agent = None
                     async for event in handler.stream_events():

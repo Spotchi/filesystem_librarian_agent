@@ -8,6 +8,8 @@ from app.engine.event_model import _Message
 from app.engine.source_model import _SourceNodes
 
 from app.engine.workflows.orchestrate_suggest import orchestrate_suggest_workflow
+from app.engine.workflows.para_workflow import para_workflow
+
 
 from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core.agent.workflow import AgentStream, ToolCall, ToolCallResult
@@ -101,7 +103,7 @@ async def chat(
         "chat", attributes=attributes, end_on_exit=False
     ) as span:
         
-        workflow = orchestrate_suggest_workflow()
+        workflow = para_workflow()
         
         last_message_content, messages = await parse_chat_data(data)
         span.set_attribute(SpanAttributes.INPUT_VALUE, last_message_content)
