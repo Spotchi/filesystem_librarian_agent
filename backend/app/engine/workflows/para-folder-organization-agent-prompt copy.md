@@ -1,21 +1,3 @@
-from llama_index.core.agent.workflow import (
-    AgentWorkflow,
-)
-
-from llama_index.llms.openai import OpenAI
-from llama_index.core.agent.workflow import FunctionAgent
-
-
-from app.engine.suggestion_tool import suggestion_tool, apply_file_operations_tool
-from app.engine.vault_tool import get_vault_tree_tool
-
-from app.engine.prompts import orchestrating_agent_prompt, suggestion_agent_prompt
-
-
-ORCHESTRATE_PARA_WORKFLOW_ID = "orchestrate_para_workflow"
-
-
-para_agent_prompt = """
 # PARA Folder Organization Agent
 
 ## Role and Goal
@@ -193,24 +175,3 @@ Is there any specific part of the organization you'd like me to explain or modif
    - Never write "*I'll check your folders*" or "*Using get_vault_tree*" - just use the tool
 
 Remember that the goal is to help the user implement a sustainable system that works for them, not to create a theoretically perfect folder structure that they won't maintain.
-
-"""
-
-def para_workflow() -> AgentWorkflow:
-
-    llm = OpenAI(temperature=0.0, model="gpt-4.1-2025-04-14")
-
-    orchestrating_agent = FunctionAgent(
-        name="orchestrating_agent",
-        description="This agent is responsible for organizing a folder in a pre-defined structure",
-        llm=llm,
-        tools=[get_vault_tree_tool, apply_file_operations_tool, suggestion_tool],
-        system_prompt=para_agent_prompt,
-        can_handoff_to=["Para Agent"],
-    )
-
-    workflow = AgentWorkflow(agents=[orchestrating_agent],
-                             root_agent=orchestrating_agent.name,
-                             )
-    
-    return workflow

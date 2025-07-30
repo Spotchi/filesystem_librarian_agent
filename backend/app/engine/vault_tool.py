@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 from llama_index.core.tools import FunctionTool
 
-def print_tree(p: Path, last=True, header=''):
+def print_tree(p: Path, last=True, header='', exclude=['.git', '.DS_Store']):
     elbow = "└──"
     pipe = "│  "
     tee = "├──"
@@ -10,8 +10,9 @@ def print_tree(p: Path, last=True, header=''):
     result = [header + (elbow if last else tee) + p.name]
     if p.is_dir():
         children = list(p.iterdir())
+        children = [c for c in children if c.name not in exclude]
         for i, c in enumerate(children):
-            result.extend(print_tree(c, header=header + (blank if last else pipe), last=i == len(children) - 1))
+            result.extend(print_tree(c, header=header + (blank if last else pipe), last=i == len(children) - 1, exclude=exclude))
     return result
 
 def get_vault_tree() -> str:

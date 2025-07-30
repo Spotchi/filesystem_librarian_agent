@@ -1,10 +1,10 @@
-from typing import List, Optional
+from typing import List, Optional, Literal
 from pydantic import BaseModel
 
 
 class FileOperation(BaseModel):
     """A single file or folder operation to be performed"""
-    operationType: str  # Literal["move", "rename"] - if using Python 3.8+, you can use Literal
+    operationType: Literal["move", "remove"]
     sourcePath: str
     destinationPath: str
     isDirectory: bool = False

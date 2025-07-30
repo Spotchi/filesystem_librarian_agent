@@ -34,13 +34,32 @@ async def apply_file_operations(
     """
     # suggestion = await ctx.get("suggestions")
     parsed_suggestion = FileOperationsResponse(**suggestion)
+    
     for operation in parsed_suggestion.operations:
-        if operation.isDirectory:
-            print(f"Making directory: {absolute_path(operation.destinationPath)}")
-            os.makedirs(absolute_path(operation.destinationPath), exist_ok=True)
-        else:
-            print(f"Moving file: {absolute_path(operation.sourcePath)} to {absolute_path(operation.destinationPath)}")
-            shutil.move(absolute_path(operation.sourcePath), absolute_path(operation.destinationPath))
+        # Check if both paths are within INPUT_FILES
+        source_abs = absolute_path(operation.sourcePath)
+        dest_abs = absolute_path(operation.destinationPath)
+        input_files_path = os.environ["INPUT_FILES"]
+        
+        if not source_abs.startswith(input_files_path):
+            raise ValueError(f"Source path {operation.sourcePath} is outside of INPUT_FILES directory")
+        if dest_abs and not dest_abs.startswith(input_files_path):
+            raise ValueError(f"Destination path {operation.destinationPath} is outside of INPUT_FILES directory")
+        if operation.operationType == "move":
+            if operation.isDirectory:
+                print(f"Making directory: {absolute_path(operation.destinationPath)}")
+                os.makedirs(absolute_path(operation.destinationPath), exist_ok=True)
+            else:
+                print(f"Moving file: {absolute_path(operation.sourcePath)} to {absolute_path(operation.destinationPath)}")
+                os.makedirs(os.path.dirname(absolute_path(operation.destinationPath)), exist_ok=True)
+                shutil.move(absolute_path(operation.sourcePath), absolute_path(operation.destinationPath))
+        elif operation.operationType == "remove":
+            if operation.isDirectory:
+                print(f"Removing directory: {absolute_path(operation.sourcePath)}")
+                shutil.rmtree(absolute_path(operation.sourcePath))
+            else:
+                print(f"Removing file: {absolute_path(operation.sourcePath)}")
+                os.remove(absolute_path(operation.sourcePath))
     return "File operations applied successfully"
 
 apply_file_operations_tool = FunctionTool.from_defaults(apply_file_operations)
